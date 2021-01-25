@@ -77,7 +77,7 @@ app.layout = html.Div([
         ),className='', style={'width':'50%', 'float':'left'}),
         html.Div([
             html.Div(dcc.Graph(id='mnist-image',
-                            figure=mnistfig), 
+                            figure=go.Figure()), 
                 className='',
                 style={}),
             ], style={'width':'45%', 'position':'absolute', 'height':'750px',
