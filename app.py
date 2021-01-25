@@ -20,9 +20,8 @@ def graphimage(data, point=0):
     except:
         img = np.zeros((28,28))
 
-    z = np.zeros((28,28,3), dtype=np.uint8)
-    z[:,:,1] =  img
-    f = go.Figure(go.Image(z=z))
+    f = px.imshow(img, color_continuous_scale='gray') #go.Figure(go.Image(z=z))
+    f.layout.coloraxis.showscale = False
     f.update_layout(
         height=96,
         width=96,
@@ -42,24 +41,18 @@ def imagediv(fg, id):
     
 colors_list = px.colors.qualitative.Plotly
 colors = {i:c for i,c in enumerate(colors_list)}
-print(colors)
+
 external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
 
 app = dash.Dash(__name__, external_stylesheets=external_stylesheets)
 
-images = np.load('mnist_norm.npy')
+images = np.load('Data/mnist_norm.npy')
 images = images.reshape((-1, 28, 28))
 
-df = pd.read_pickle('umap.pkl')#.sort_values('label')
+df = pd.read_pickle('Data/umap.pkl')
 df = df.reset_index()
 df = df.sort_values('label')
 
-styles = {
-    'pre': {
-        'border': 'thin lightgrey solid',
-        'overflowX': 'scroll'
-    }
-}
 fig = px.scatter(df, x='x', y='y', color='label',
                  custom_data=[df.index, df.label])
 
@@ -69,14 +62,6 @@ fig.update_layout(clickmode='event+select',
                   width=600,
                   legend={'itemsizing':'constant','itemwidth':60})
 
-z = np.zeros((28,28,3), dtype=np.uint8)
-z[:,:,1] =255*(images[14]).astype('uint8') 
-mnistfig = go.Figure(go.Image(z=z))
-selfig = go.Figure() # make_subplots(1,4, horizontal_spacing=.05)
-mnistfig.update_layout(height=282,
-                       width=282)
-mnistfig.update_xaxes(showticklabels=False) 
-mnistfig.update_yaxes(showticklabels=False) 
 
 num_options = [{'label':s, 'value':s} for s in range(10)]
 num_options.insert(0, {'label':'All', 'value':-1})
@@ -92,11 +77,11 @@ app.layout = html.Div([
         ),className='', style={'width':'50%', 'float':'left'}),
         html.Div([
             html.Div(dcc.Graph(id='mnist-image',
-                            figure=mnistfig), 
+                            figure=go.Figure()), 
                 className='',
                 style={}),
             html.Div(
-                children=[imagediv(selfig, "s0")],
+                children=[],#imagediv(None, "s0")],
                 id='selected-images', className='', 
                 style={'width':'95%', 'height':'300px', 'display':'flex',
                        'flex-wrap':'wrap'}),
@@ -109,8 +94,8 @@ app.layout = html.Div([
                 ),     
             ], style={'position':'absolute', 'width':'100%','bottom':'0px', 'left':'0px',
                       }),
-    ], style={'width':'45%', 'position':'absolute', 'height':'750px',
-              'left':'50%', 'top':'50px','border':'3px solid #73AD21'}),
+        ], style={'width':'45%', 'position':'absolute', 'height':'750px',
+                  'left':'50%', 'top':'50px','border':'3px solid #73AD21'}),
 ])
 
 @app.callback(
@@ -129,8 +114,6 @@ def pick_label(val_label):
         _df = df[df.label == val_label].copy()
         xcolor = 'xcolor'
         _df['xcolor'] = colors[val_label]
-        print(xcolor, val_label, colors[val_label])
-        print(_df.head())
      
     f1 = px.scatter(_df, x='x', y='y', color='label',
                  custom_data=[_df.index, _df.label])
@@ -147,25 +130,17 @@ def pick_label(val_label):
     
 @app.callback(
     Output('mnist-image', 'figure'),
-    #Output('hover-data', 'children')],
     Input('basic-interactions', 'hoverData'))
 def display_hover_data(hoverData):
     f = graphimage(hoverData)
-    return f #, json.dumps(hoverData, indent=2)
-'''
-@app.callback(
-    Output('hover-data', 'children'),
-    Input('basic-interactions', 'hoverData'))
-def display_hover_data(hoverData):
-    return json.dumps(hoverData, indent=2)
-'''
+    return f
+
 @app.callback(
     [Output('table', 'data'),
      Output('selected-images', 'children')],
     Input('basic-interactions', 'selectedData'))
 def display_hover_data(selectedData):
     if selectedData is None:
-        #return json.dumps(selectedData, indent=2), [] 
         return [{'a':0}], [] 
 
     n = len(selectedData['points'])
@@ -176,12 +151,9 @@ def display_hover_data(selectedData):
         fg = graphimage(selectedData, point=ix)
         fgdiv = imagediv(fg, f"si{i}")
         g.append(fgdiv)
-
         px.append(selectedData['points'][ix]['customdata'][0])
-        #if i > 4:
-        #    break
    
     res_table = df.loc[df.index.isin(px)].to_dict('records')
     return res_table, g
 if __name__ == '__main__':
-     app.run_server(debug=True)
+     app.run_server(debug=True, port=8603)

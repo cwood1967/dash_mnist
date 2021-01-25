@@ -47,19 +47,13 @@ external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
 
 app = dash.Dash(__name__, external_stylesheets=external_stylesheets)
 
-images = np.load('mnist_norm.npy')
+images = np.load('Data/mnist_norm.npy')
 images = images.reshape((-1, 28, 28))
 
-df = pd.read_pickle('umap.pkl')#.sort_values('label')
+df = pd.read_pickle('Data/umap.pkl')
 df = df.reset_index()
 df = df.sort_values('label')
 
-styles = {
-    'pre': {
-        'border': 'thin lightgrey solid',
-        'overflowX': 'scroll'
-    }
-}
 fig = px.scatter(df, x='x', y='y', color='label',
                  custom_data=[df.index, df.label])
 
@@ -68,15 +62,6 @@ fig.update_layout(clickmode='event+select',
                   height=600,
                   width=600,
                   legend={'itemsizing':'constant','itemwidth':60})
-
-z = np.zeros((28,28,3), dtype=np.uint8)
-z[:,:,1] =255*(images[14]).astype('uint8') 
-mnistfig = go.Figure(go.Image(z=z))
-selfig = go.Figure() # make_subplots(1,4, horizontal_spacing=.05)
-mnistfig.update_layout(height=282,
-                       width=282)
-mnistfig.update_xaxes(showticklabels=False) 
-mnistfig.update_yaxes(showticklabels=False) 
 
 num_options = [{'label':s, 'value':s} for s in range(10)]
 num_options.insert(0, {'label':'All', 'value':-1})
@@ -95,21 +80,7 @@ app.layout = html.Div([
                             figure=mnistfig), 
                 className='',
                 style={}),
-            html.Div(
-                children=[imagediv(selfig, "s0")],
-                id='selected-images', className='', 
-                style={'width':'95%', 'height':'300px', 'display':'flex',
-                       'flex-wrap':'wrap'}),
-            html.Div([
-                dash_table.DataTable(
-                    id='table',
-                    columns=[{'name':i, 'id': i} for i in df.columns],
-                    data=df.sample(10).to_dict('records'),
-                    style_cell={'font-size':'medium', 'height':'10px'}
-                ),     
-            ], style={'position':'absolute', 'width':'100%','bottom':'0px', 'left':'0px',
-                      }),
-    ], style={'width':'45%', 'position':'absolute', 'height':'750px',
+            ], style={'width':'45%', 'position':'absolute', 'height':'750px',
               'left':'50%', 'top':'50px','border':'3px solid #73AD21'}),
 ])
 
@@ -168,4 +139,4 @@ def display_hover_data(hoverData):
     return f 
 
 if __name__ == '__main__':
-     app.run_server(debug=True)
+     app.run_server(debug=True, port=8602)

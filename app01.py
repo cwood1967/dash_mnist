@@ -16,16 +16,9 @@ external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
 
 app = dash.Dash(__name__, external_stylesheets=external_stylesheets)
 
-df = pd.read_pickle('umap.pkl')#.sort_values('label')
+df = pd.read_pickle('Data/umap.pkl')
 df = df.reset_index()
 df = df.sort_values('label')
-
-styles = {
-    'pre': {
-        'border': 'thin lightgrey solid',
-        'overflowX': 'scroll'
-    }
-}
 
 colors_list = px.colors.qualitative.Plotly
 colors = {i:c for i,c in enumerate(colors_list)}
